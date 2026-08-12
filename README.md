@@ -31,6 +31,15 @@ using it, with no staging step and no rollback. Inline and Webflow Custom Code
 API installs are covered in the
 [script README](webflow/utm-attribution/README.md#installation).
 
+To have the browser reject a tampered file, add the subresource integrity hash
+for the release:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js"
+        integrity="sha384-grRIEwOLKXmcCEl4lburiuvoZ/HRJlDXwnGMuXPoduFqfqRHv6k5WAHlMLjSgrfu"
+        crossorigin="anonymous"></script>
+```
+
 Then verify: load any page **without** a form at
 `?utm_source=test&utm_medium=test&utm_campaign=readme`, navigate to a form page
 through normal site links, and check that the hidden inputs are populated.

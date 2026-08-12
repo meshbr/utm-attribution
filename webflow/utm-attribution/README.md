@@ -62,7 +62,17 @@ curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-at
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
-Prefix the output with `sha384-` when you pass it to Webflow.
+Prefix the output with `sha384-` when you pass it to Webflow. For the current
+release:
+
+```
+version:       v1.1.0
+hostedLocation https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js
+integrityHash  sha384-grRIEwOLKXmcCEl4lburiuvoZ/HRJlDXwnGMuXPoduFqfqRHv6k5WAHlMLjSgrfu
+```
+
+The hash covers the exact bytes at that tag, so it changes with every release —
+regenerate it each time rather than copying this one forward.
 
 Notes that catch people out:
 
