@@ -26,7 +26,7 @@ standard `<form>`.
 Add one line to **Site Settings → Custom Code → Footer Code**, then publish.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/meshbr/misc-scripts@v1.1.0/utm-attribution.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js"></script>
 ```
 
 **Pin to a tag, never a branch.** Referencing `@main` means every push rewrites
@@ -34,13 +34,14 @@ the script on every site using it, with no staging step and no way to roll back.
 jsDelivr also caches branch refs for roughly 12 hours, so you get uncontrolled
 changes *and* unpredictable propagation. Tag your releases.
 
-> jsDelivr only serves **public** repositories. If `misc-scripts` stays private,
-> host the built file on Cloudflare Pages, Render, or any static host and use
-> that URL instead. Everything below applies unchanged.
+> jsDelivr only serves **public** repositories. `meshbr/utm-attribution` is
+> public, so the URL above works as-is. If the repo is ever made private, host
+> the file on Cloudflare Pages, Render, or any static host and swap the URL —
+> everything below applies unchanged.
 
 ### Option B — inline
 
-Paste the contents of `utm-attribution.js` into **Site Settings → Custom Code →
+Paste the contents of `utm-attributions.js` into **Site Settings → Custom Code →
 Footer Code**, wrapped in `<script>` tags. Simpler to start, but you now maintain
 a separate copy per site. Fine for one site; painful across five.
 
@@ -57,7 +58,7 @@ with OAuth** — site tokens are rejected with a 401 on these endpoints.
 Generate the integrity hash from the exact tagged URL:
 
 ```bash
-curl -s https://cdn.jsdelivr.net/gh/meshbr/misc-scripts@v1.1.0/utm-attribution.js \
+curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
