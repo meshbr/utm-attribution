@@ -5,13 +5,6 @@
    Captures campaign parameters on entry, persists them, and injects
    them as hidden fields into every form on the site.
 
-   Changes from the Performance Contractors original:
-     - decorates ALL forms, not only Basin forms
-     - re-runs when forms appear later in the page lifecycle
-     - never writes duplicate hidden fields
-     - cookie is written at the registrable domain so apex/www share it
-     - localStorage fallback when cookies are unavailable
-     - wider parameter list (paid social + Google auto-tagging)
    ------------------------------------------------------------------ */
 (function () {
   'use strict';
