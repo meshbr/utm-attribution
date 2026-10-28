@@ -1,6 +1,6 @@
 # utm-attribution
 
-Cross-page campaign attribution for Webflow sites.
+Cross-page campaign attribution for Webflow sites, plus a WordPress plugin for Gravity Forms.
 
 A visitor lands on a blog post with `?utm_source=…`, browses for a while, and
 converts three pages later on a form that never saw the original URL. Without
@@ -17,6 +17,7 @@ No dependencies, no build step, no tag manager required.
 |---|---|
 | [webflow/utm-attribution/utm-attributions.js](webflow/utm-attribution/utm-attributions.js) | The script. Drop-in, self-contained IIFE. |
 | [webflow/utm-attribution/README.md](webflow/utm-attribution/README.md) | Install, configuration, captured fields, debugging, migration notes. |
+| [wordpress/utm-attribution-gravity-forms/](wordpress/utm-attribution-gravity-forms/README.md) | WordPress plugin: same attribution for Gravity Forms hidden fields. |
 
 ## Quick start
 
