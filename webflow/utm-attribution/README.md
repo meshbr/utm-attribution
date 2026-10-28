@@ -26,7 +26,7 @@ standard `<form>`.
 Add one line to **Site Settings → Custom Code → Footer Code**, then publish.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js"></script>
 ```
 
 **Pin to a tag, never a branch.** Referencing `@main` means every push rewrites
@@ -58,7 +58,7 @@ with OAuth** — site tokens are rejected with a 401 on these endpoints.
 Generate the integrity hash from the exact tagged URL:
 
 ```bash
-curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js \
+curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
@@ -66,9 +66,9 @@ Prefix the output with `sha384-` when you pass it to Webflow. For the current
 release:
 
 ```
-version:       v1.1.0
-hostedLocation https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js
-integrityHash  sha384-grRIEwOLKXmcCEl4lburiuvoZ/HRJlDXwnGMuXPoduFqfqRHv6k5WAHlMLjSgrfu
+version:       v1.2.0
+hostedLocation https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js
+integrityHash  sha384-ShIjT8G53UA00K8MJXAmSztGBgem+RxBPnuVzwPeoxHb83dx21N0dpP3ML7Rup3W
 ```
 
 The hash covers the exact bytes at that tag, so it changes with every release —
@@ -94,7 +94,8 @@ Edit the `CONFIG` block at the top of the file.
 
 | Key | Default | What it does |
 |---|---|---|
-| `key` | `pc_attribution` | Cookie and localStorage key. Change per site, or share across a brand family to carry attribution between domains you control. |
+| `key` | `form_attribution` | Cookie and localStorage key. Keep it identical to the Gravity Forms plugin to share attribution between Webflow and WordPress sites on the same domain. |
+| `legacyKeys` | `['pc_attribution']` | Older keys whose stored attribution is carried over into `key` once, then deleted. |
 | `days` | `90` | Attribution window. |
 | `mode` | `'last'` | `'last'` — newest campaign wins. `'first'` — keep the original touch. |
 | `cookieDomain` | `''` | Auto-derives `.example.com` from `www.example.com`. Set explicitly for multi-part TLDs, e.g. `.example.co.uk`. |
@@ -177,6 +178,17 @@ that is non-essential and requires opt-in. Most US state privacy laws treat
 first-party attribution as opt-out. Confirm the requirement per client — this is
 a policy decision, not a technical one.
 
+Declare it in the consent tool as:
+
+| Name | Type | Duration | Category | Purpose |
+|---|---|---|---|---|
+| `form_attribution` | First-party cookie | 90 days | Marketing | Remembers the campaign that brought the visitor to the site (UTM parameters, ad click IDs, landing page, referrer, first-visit time) so it can be recorded with form submissions. |
+| `form_attribution` | Local storage | 90 days | Marketing | Backup copy of the same data if the cookie is blocked or cleared. |
+
+Sites upgraded from v1.1.0 or earlier used `pc_attribution`. It is migrated and
+deleted on each returning visitor's next page view, so it can be dropped from the
+declaration 90 days after the upgrade.
+
 If a consent platform is in use, the hosted-script install is the easy case:
 CMPs block by `src`, so tag the one script tag with a category and you're done.
 An inline install has to be rewritten as `type="text/plain"` with a category
@@ -225,8 +237,8 @@ Tag every release. Sites reference tags, so an untagged change ships nowhere —
 which is the point.
 
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 Then update the `@version` in each site's script tag when you want that site to
@@ -236,6 +248,10 @@ is that you get to choose when each client moves.
 ---
 
 ## Changelog
+
+**v1.2.0**
+- Cookie and localStorage key renamed from `pc_attribution` to `form_attribution`
+- Existing `pc_attribution` data is carried over to the new key on the next page view, and the old cookie and localStorage entry are deleted (`legacyKeys`)
 
 **v1.1.0**
 - Decorates all forms, not only Basin forms
