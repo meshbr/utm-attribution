@@ -23,7 +23,7 @@ No dependencies, no build step, no tag manager required.
 Add one line to **Site Settings → Custom Code → Footer Code** and publish:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js"></script>
 ```
 
 Pin to a tag, never a branch — a branch ref rewrites the script on every site
@@ -35,8 +35,8 @@ To have the browser reject a tampered file, add the subresource integrity hash
 for the release:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.1.0/webflow/utm-attribution/utm-attributions.js"
-        integrity="sha384-grRIEwOLKXmcCEl4lburiuvoZ/HRJlDXwnGMuXPoduFqfqRHv6k5WAHlMLjSgrfu"
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js"
+        integrity="sha384-ShIjT8G53UA00K8MJXAmSztGBgem+RxBPnuVzwPeoxHb83dx21N0dpP3ML7Rup3W"
         crossorigin="anonymous"></script>
 ```
 
@@ -63,8 +63,8 @@ Sites reference tags, so releases are cut with tags and each site moves forward
 when you choose:
 
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 ## License

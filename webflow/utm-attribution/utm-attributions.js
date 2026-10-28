@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------
    Cross-page attribution capture for Webflow
-   v1.1.0
+   v1.2.0
 
    Captures campaign parameters on entry, persists them, and injects
    them as hidden fields into every form on the site.
@@ -12,7 +12,10 @@
   // ---------------- CONFIG -----------------------------------------
   var CONFIG = {
     // Storage key. Change per site or keep shared across a brand family.
-    key: 'pc_attribution',
+    key: 'form_attribution',
+
+    // Older keys to carry over once into `key`, then delete.
+    legacyKeys: ['pc_attribution'],
 
     // Attribution window, in days.
     days: 90,
@@ -55,9 +58,10 @@
     return '.' + parts.slice(-2).join('.');
   }
 
-  function readCookie() {
+  function readCookie(key) {
+    key = key || CONFIG.key;
     var m = document.cookie.match(
-      new RegExp('(?:^|; )' + CONFIG.key.replace(/([.*+?^${}()|[\]\\])/g, '\\$1') + '=([^;]*)')
+      new RegExp('(?:^|; )' + key.replace(/([.*+?^${}()|[\]\\])/g, '\\$1') + '=([^;]*)')
     );
     if (!m) return null;
     try { return JSON.parse(decodeURIComponent(m[1])); } catch (e) { return null; }
@@ -75,13 +79,14 @@
       ';SameSite=Lax' + secure;
   }
 
-  function readLocal() {
+  function readLocal(key) {
+    key = key || CONFIG.key;
     try {
-      var raw = window.localStorage.getItem(CONFIG.key);
+      var raw = window.localStorage.getItem(key);
       if (!raw) return null;
       var parsed = JSON.parse(raw);
       if (parsed.__exp && Date.now() > parsed.__exp) {
-        window.localStorage.removeItem(CONFIG.key);
+        window.localStorage.removeItem(key);
         return null;
       }
       delete parsed.__exp;
@@ -97,7 +102,28 @@
     } catch (e) { /* private mode, quota, etc. */ }
   }
 
-  function load() { return readCookie() || readLocal() || {}; }
+  function removeStored(key) {
+    var domain = registrableDomain();
+    var expired = '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+    document.cookie = key + expired + (domain ? ';domain=' + domain : '');
+    document.cookie = key + expired; // host-only copy, if one was written
+    try { window.localStorage.removeItem(key); } catch (e) { /* ignore */ }
+  }
+
+  // Carry attribution stored under an old key over to CONFIG.key, once.
+  function migrateLegacy() {
+    var found = null;
+    (CONFIG.legacyKeys || []).forEach(function (key) {
+      if (key === CONFIG.key) return;
+      var value = readCookie(key) || readLocal(key);
+      if (value && !found) found = value;
+      if (value) removeStored(key);
+    });
+    if (found) save(found);
+    return found;
+  }
+
+  function load() { return readCookie() || readLocal() || migrateLegacy() || {}; }
 
   function save(obj) { writeCookie(obj); writeLocal(obj); }
 
