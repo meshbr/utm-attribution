@@ -213,9 +213,72 @@ declaration 90 days after the upgrade.
 
 If a consent platform is in use, the hosted-script install is the easy case:
 CMPs block by `src`, so tag the one script tag with a category and you're done.
-An inline install has to be rewritten as `type="text/plain"` with a category
+An inline install has to be rewritten as a blocked script type with a category
 attribute for the CMP to re-enable it, which is a reason to prefer Option A on
 any site with a CMP.
+
+### Finsweet Consent Pro
+
+**1. Gate the script.** Replace the plain embed with a blocked one in Site
+settings → Custom code → Footer:
+
+```html
+<script
+  type="fs-consent"
+  fs-consent-categories="marketing"
+  src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.3.0/webflow/utm-attribution/utm-attributions.js"
+></script>
+```
+
+Consent Pro leaves it inert until the visitor allows **Marketing**, then loads
+it. The `integrity` attribute is left off on purpose: Consent Pro rebuilds the
+tag when it activates it, and its docs don't say whether `integrity` and
+`crossorigin` are carried over. If you want SRI, add
+`integrity="sha384-…" crossorigin="anonymous"` and confirm in the Network tab
+that the script still loads after accepting. If it's blocked, remove them.
+
+Alternatively, skip the manual tag: in the Consent Pro app, add a tracker with
+the jsDelivr URL above as its target, set the category to Marketing, and
+publish. Use one method, not both.
+
+**2. Declare the cookie.** `form_attribution` isn't in the Open Cookie Database
+or Consent Pro's own list, so the scanner reports it as Uncategorized. In the
+app's Cookies list, categorize it and fill in:
+
+| Field | Value |
+|---|---|
+| Name | `form_attribution` |
+| Provider | The site's own domain (first party) |
+| Category | Marketing |
+| Duration | 90 days |
+| Description | Remembers the campaign that brought the visitor to the site (UTM parameters, ad click IDs, landing page, referrer, first-visit time) so it can be recorded with form submissions. Also kept in local storage as a backup. |
+
+Add `pc_attribution` the same way on sites upgraded from v1.1.0 or earlier, for
+the 90 days it takes to migrate. Don't rename the cookie with Consent Pro's
+`fscw_` prefix: that marks a cookie as always allowed and bypasses consent.
+
+With cookie cleanup on, Consent Pro deletes `form_attribution` when a visitor
+withdraws Marketing consent. The local storage copy isn't a cookie and isn't
+cleaned up, but the script never runs without consent, so nothing reads it.
+
+**3. Know the trade-off.** While the script is blocked, nothing is recorded.
+Accepting on the landing page is fine: the script runs as soon as it's
+released and reads the parameters still in the URL. If the visitor only accepts
+on a later page, the landing page's
+UTM parameters are gone, so the lead is recorded as organic, referral, or
+direct. That is what opt-in requires. On US-only sites that use opt-out mode,
+Consent Pro loads Marketing scripts by default, so nothing is lost unless the
+visitor opts out.
+
+**4. Test it** in a private window on staging:
+
+1. Visit `/?utm_source=test&utm_campaign=consent`. Before making a choice,
+   there is no `form_attribution` cookie and `window.__attribution` is
+   undefined.
+2. Reject Marketing and reload. Still no cookie.
+3. Clear site data, visit again, and accept Marketing. The cookie appears and
+   `window.__attribution` holds the test values.
+4. Open the preferences panel and withdraw Marketing. The cookie is removed.
 
 ---
 
