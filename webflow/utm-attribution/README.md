@@ -26,7 +26,7 @@ standard `<form>`.
 Add one line to **Site Settings → Custom Code → Footer Code**, then publish.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.3.0/webflow/utm-attribution/utm-attributions.js"></script>
 ```
 
 **Pin to a tag, never a branch.** Referencing `@main` means every push rewrites
@@ -58,7 +58,7 @@ with OAuth** — site tokens are rejected with a 401 on these endpoints.
 Generate the integrity hash from the exact tagged URL:
 
 ```bash
-curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js \
+curl -s https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.3.0/webflow/utm-attribution/utm-attributions.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
@@ -66,9 +66,9 @@ Prefix the output with `sha384-` when you pass it to Webflow. For the current
 release:
 
 ```
-version:       v1.2.0
-hostedLocation https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.2.0/webflow/utm-attribution/utm-attributions.js
-integrityHash  sha384-ShIjT8G53UA00K8MJXAmSztGBgem+RxBPnuVzwPeoxHb83dx21N0dpP3ML7Rup3W
+version:       v1.3.0
+hostedLocation https://cdn.jsdelivr.net/gh/meshbr/utm-attribution@v1.3.0/webflow/utm-attribution/utm-attributions.js
+integrityHash  sha384-SV+qMYms8sJNA7O3LNLrLzG7C0jacrrZr7loUBRSqj2VMNeka5s2DvJKy8RQZCEn
 ```
 
 The hash covers the exact bytes at that tag, so it changes with every release —
@@ -98,6 +98,7 @@ Edit the `CONFIG` block at the top of the file.
 | `legacyKeys` | `['pc_attribution']` | Older keys whose stored attribution is carried over into `key` once, then deleted. |
 | `days` | `90` | Attribution window. |
 | `mode` | `'last'` | `'last'` — newest campaign wins. `'first'` — keep the original touch. |
+| `referrals` | `true` | Record non-search referring sites as `utm_medium=referral`. Organic search is always recorded. See [Organic search and referrals](#organic-search-and-referrals). |
 | `cookieDomain` | `''` | Auto-derives `.example.com` from `www.example.com`. Set explicitly for multi-part TLDs, e.g. `.example.co.uk`. |
 | `formSelector` | `'form'` | Which forms to decorate. |
 | `basinSelector` | `form[action*='usebasin.com']` | Forms that get the Basin AJAX handler. **Set to `null` on sites without Basin.** |
@@ -130,7 +131,28 @@ Injected into every form as hidden inputs:
 | `submittedPageTitle`, `submittedPageURL` | The page the form was actually submitted from |
 
 Only parameters actually present in the URL are stored and injected. Empty
-values are skipped rather than written as blanks.
+values are skipped rather than written as blanks. Visits from search engines and
+other sites without parameters fill `utm_source` and `utm_medium`; see below.
+
+## Organic search and referrals
+
+Visits without UTM or click-ID parameters are still recorded when they come from
+another site:
+
+| Referrer | Stored as |
+|---|---|
+| Google, Bing, Yahoo, DuckDuckGo, Ecosia, Brave, Yandex, Baidu, Startpage, AOL search | `utm_source` = engine (e.g. `google`), `utm_medium` = `organic` |
+| Any other external site | `utm_source` = its hostname (e.g. `facebook.com`), `utm_medium` = `referral` |
+| No referrer (direct) or a page on the same site | Nothing changes |
+
+A tagged campaign (any UTM or click-ID parameter, paid or not) always wins: an
+organic or referral visit never replaces a stored campaign, in either `mode`. A
+later organic or referral visit replaces an earlier organic or referral one in
+`'last'` mode and is ignored in `'first'` mode. Set `referrals` to `false` to
+record organic search only.
+
+Browsers usually send only the referring site's origin, so search terms are not
+available.
 
 ---
 
@@ -237,8 +259,8 @@ Tag every release. Sites reference tags, so an untagged change ships nowhere —
 which is the point.
 
 ```bash
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 Then update the `@version` in each site's script tag when you want that site to
@@ -248,6 +270,11 @@ is that you get to choose when each client moves.
 ---
 
 ## Changelog
+
+**v1.3.0**
+- Records organic search visits (`utm_medium=organic`, `utm_source` = engine) and other referring sites (`utm_medium=referral`) when there are no campaign parameters
+- Tagged campaigns always win over organic and referral visits
+- New `referrals` option
 
 **v1.2.0**
 - Cookie and localStorage key renamed from `pc_attribution` to `form_attribution`

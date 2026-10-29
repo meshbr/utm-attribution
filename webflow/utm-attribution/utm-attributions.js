@@ -1,6 +1,6 @@
 /* ------------------------------------------------------------------
    Cross-page attribution capture for Webflow
-   v1.2.0
+   v1.3.0
 
    Captures campaign parameters on entry, persists them, and injects
    them as hidden fields into every form on the site.
@@ -22,6 +22,11 @@
 
     // 'last' = most recent campaign wins. 'first' = keep the original touch.
     mode: 'last',
+
+    // With no campaign parameters, record search engine visits as
+    // organic and other external sites as referral. Tagged campaigns
+    // always win over these. Set false to record organic search only.
+    referrals: true,
 
     // Leave '' to auto-derive (example.com from www.example.com).
     // Set explicitly for multi-part TLDs, e.g. '.example.co.uk'.
@@ -127,7 +132,46 @@
 
   function save(obj) { writeCookie(obj); writeLocal(obj); }
 
+  // Search engines whose visits count as organic. Matched against the
+  // referrer hostname with any leading "www." removed.
+  var SEARCH_ENGINES = [
+    [/^google\.[a-z.]+$/, 'google'],
+    [/^(cn\.)?bing\.com$/, 'bing'],
+    [/^(search\.)?yahoo\.[a-z.]+$/, 'yahoo'],
+    [/^duckduckgo\.com$/, 'duckduckgo'],
+    [/^ecosia\.org$/, 'ecosia'],
+    [/^search\.brave\.com$/, 'brave'],
+    [/^yandex\.[a-z.]+$/, 'yandex'],
+    [/^baidu\.com$/, 'baidu'],
+    [/^startpage\.com$/, 'startpage'],
+    [/^search\.aol\.com$/, 'aol']
+  ];
+
+  // Source/medium for a visit with no campaign parameters, from the
+  // referrer: organic for search engines, referral for other sites
+  // (when CONFIG.referrals is on), nothing for direct or internal visits.
+  function referrerSource() {
+    var ref = document.referrer;
+    if (!ref) return null;
+    var host;
+    try { host = new URL(ref).hostname.toLowerCase(); } catch (e) { return null; }
+
+    var own = registrableDomain().replace(/^\./, '') || window.location.hostname;
+    if (host === own || host.slice(-(own.length + 1)) === '.' + own) return null;
+
+    var bare = host.replace(/^www\./, '');
+    for (var i = 0; i < SEARCH_ENGINES.length; i++) {
+      if (SEARCH_ENGINES[i][0].test(bare)) {
+        return { utm_source: SEARCH_ENGINES[i][1], utm_medium: 'organic' };
+      }
+    }
+    if (CONFIG.referrals === false) return null;
+    return { utm_source: bare, utm_medium: 'referral' };
+  }
+
   // ---------------- CAPTURE ----------------------------------------
+  // Tagged campaigns (UTM or click-ID parameters) always win over organic
+  // and referral visits, which are flagged __auto when stored.
   function capture() {
     var stored = load();
     var query;
@@ -140,12 +184,19 @@
       if (value !== null && value !== '') incoming[name] = value;
     });
 
-    var hasIncoming = Object.keys(incoming).length > 0;
     var hasStored = Object.keys(stored).length > 0;
+    var storedIsCampaign = hasStored && !stored.__auto;
 
-    // First-touch mode keeps whatever landed first.
-    if (!hasIncoming) return stored;
-    if (CONFIG.mode === 'first' && hasStored) return stored;
+    if (Object.keys(incoming).length) {
+      // First-touch keeps an earlier campaign, but never an organic/referral one.
+      if (CONFIG.mode === 'first' && storedIsCampaign) return stored;
+    } else {
+      incoming = referrerSource();
+      if (!incoming) return stored;
+      if (storedIsCampaign) return stored;
+      if (CONFIG.mode === 'first' && hasStored) return stored;
+      incoming.__auto = true;
+    }
 
     incoming.landing_page = window.location.href;
     incoming.landing_path = window.location.pathname;
